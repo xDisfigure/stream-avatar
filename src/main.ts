@@ -17,7 +17,6 @@ app.appendChild(canvas);
 
 const context = canvas.getContext('2d');
 
-
 if (!context) {
   throw new Error('cannot find canvas context');
 }
@@ -27,12 +26,14 @@ const mouthClose = new Image();
 const mouthBarelyOpen = new Image();
 const mouthOpenSmall = new Image();
 const mouthOpenBig = new Image();
+const arm = new Image();
 
-scene.src = 'scene.jpeg';
+scene.src = 'scene-without-arm.jpeg';
 mouthClose.src = 'mouth-close.png';
 mouthBarelyOpen.src = 'mouth-barely-open.jpeg';
 mouthOpenSmall.src = 'mouth-open-small.png';
 mouthOpenBig.src = 'mouth-open-big.jpeg';
+arm.src = 'arm.png';
 
 scene.onload = () => {
   canvas.width = scene.width;
@@ -65,16 +66,62 @@ const getSpriteByAudioLevel = (audioLevel: number) => {
   },  mouthClose);
 }
 
+const drawImage = (
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  scale: number,
+  rotation: number
+) => {
+  context.setTransform(scale, 0, 0, scale, x, y); // sets scale and origin
+  context.rotate(rotation);
+  context.drawImage(image, -cx, -cy, image.width * scale, image.height * scale);
+  context.setTransform(1,0,0,1,0,0);
+} 
+
+const timer = (duration: number) => {
+  return {
+    duration,
+    _lastTime: 0,
+    progression: 0,
+
+    run(time: number, oncomplete?: () => void) {
+      this.progression = (time - this._lastTime) / this.duration;
+      
+      if (this._lastTime === 0 || this.progression > 1) {
+        this._lastTime = time;
+        this.progression = 0;
+        oncomplete?.();
+      }
+    },
+    reset(time = 0) {
+      this._lastTime = time;
+      this.progression = 0;
+    }
+  }
+}
+
+const randomIntFromInterval = (min: number, max: number) => { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
 const main = async () => {
   const microphoneId = 'a695726332ad7ce703ed05d25eb699e360ac13642b0eaf8c37e0178e97b7abed';
-  const micMediaStream = await getMicrophoneMediaStream(microphoneId)
+  const micMediaStream = await getMicrophoneMediaStream(microphoneId);
+
+  const tick = timer(60);
+  const armTimer = timer(1200);
   
   const { analyze } = createAudioAnalyzer(micMediaStream);
   
   console.log(`microphone media stream id: ${micMediaStream.id}`);
   
-  const refreshMs = 60;
-  let lastTime = 0;
+ 
+  const maxArmDegree = 6;
+  let lastArmDegree = 0;
+  let targetArmDegree = 0;
   let sprite = mouthClose;
 
   const render = (time: number) => {    
@@ -86,16 +133,13 @@ const main = async () => {
 
     // audio computations
     const audioLevel = analyze();
-    console.log(audioLevel)
+
     const smoothedAudioLevel = smooth(audioLevel);
     const candidateSprite = getSpriteByAudioLevel(smoothedAudioLevel);
     
-    if (lastTime === 0 || time - lastTime > refreshMs) {
-      lastTime = time;
+    tick.run(time, () => {
       sprite = candidateSprite;
-    }
-
-    // console.log(smoothedAudioLevel)
+    });
 
     // mouth sprite config
     const { offsetX = 0, offsetY = 0, scale = 1 } = configs.get(sprite) || {};
@@ -109,6 +153,31 @@ const main = async () => {
     // draw mouth
     context.drawImage(sprite, x, y, width, height);
 
+    // draw arm
+    const armScale = 1;
+    const armOffsetX = 120;
+    const armOffsetY = 180;
+
+    armTimer.run(time, () => {
+      const direction = Math.random() > .5 ? -1 : targetArmDegree > 0 ? -1 : 1;
+      
+      lastArmDegree = targetArmDegree;
+      targetArmDegree = maxArmDegree * direction;
+      armTimer.duration = randomIntFromInterval(800, 2000)
+    });
+    
+    const degree = lastArmDegree + armTimer.progression * (targetArmDegree - lastArmDegree);
+
+    drawImage(
+      arm, 
+      armOffsetX+arm.width, 
+      armOffsetY, 
+      arm.width, 
+      0, 
+      armScale, 
+      degree * Math.PI/180
+    )
+  
     requestAnimationFrame(render);
   };
 
