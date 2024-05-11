@@ -53,11 +53,11 @@ const sprites = [
   mouthOpenBig
 ]
 
-const getSpriteBaseOnAudio = (audioThresshold: number) => {
+const getSpriteByAudioLevel = (audioLevel: number) => {
   return sprites.reduce((spriteFound, sprite) => {
     const spriteConfig = configs.get(sprite) || {};
     
-    if (audioThresshold > spriteConfig.audioThresshold) {
+    if (audioLevel > spriteConfig.audioThresshold) {
       return sprite;
     }
 
@@ -82,7 +82,7 @@ const main = async () => {
     // audio computations
     const audioLevel = analyze();
     const smoothedAudioLevel = smooth(audioLevel);
-    const candidateSprite = getSpriteBaseOnAudio(smoothedAudioLevel);
+    const candidateSprite = getSpriteByAudioLevel(smoothedAudioLevel);
     
     if (lastTime === 0 || time - lastTime > refreshMs) {
       lastTime = time;

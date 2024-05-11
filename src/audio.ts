@@ -24,7 +24,6 @@ export const createAudioAnalyzer = async () => {
 
     console.log(`microphone media stream id: ${micMediaStream.id}`);
 
-
     source.connect(analyzer);
     
     return {
