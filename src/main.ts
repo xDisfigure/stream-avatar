@@ -108,7 +108,7 @@ const randomIntFromInterval = (min: number, max: number) => { // min and max inc
 }
 
 const main = async () => {
-  const microphoneId = 'a695726332ad7ce703ed05d25eb699e360ac13642b0eaf8c37e0178e97b7abed';
+  const microphoneId = 'default';
   const micMediaStream = await getMicrophoneMediaStream(microphoneId);
 
   const tick = timer(60);
