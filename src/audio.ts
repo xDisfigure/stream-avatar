@@ -10,7 +10,7 @@ const getMicrophoneMediaStream = async () => {
     return mediaStream;
 }
 
-window.AudioContext = window.AudioContext || (window as any).webkitAudioContext as AudioContext;
+window.AudioContext = window.AudioContext || (window as any).webkitAudioContext;
 
 export const createAudioAnalyzer = async () => {
     const micMediaStream = await getMicrophoneMediaStream()
