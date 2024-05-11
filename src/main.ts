@@ -1,4 +1,4 @@
-import { createAudioAnalyzer, smooth } from './audio';
+import { createAudioAnalyzer, getMicrophoneMediaStream, smooth } from './audio';
 import './style.css'
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -66,11 +66,16 @@ const getSpriteByAudioLevel = (audioLevel: number) => {
 }
 
 const main = async () => {
-  const { analyze } = await createAudioAnalyzer();
-
+  const microphoneId = 'a695726332ad7ce703ed05d25eb699e360ac13642b0eaf8c37e0178e97b7abed';
+  const micMediaStream = await getMicrophoneMediaStream(microphoneId)
+  
+  const { analyze } = createAudioAnalyzer(micMediaStream);
+  
+  console.log(`microphone media stream id: ${micMediaStream.id}`);
+  
+  const refreshMs = 60;
   let lastTime = 0;
   let sprite = mouthClose;
-  const refreshMs = 60;
 
   const render = (time: number) => {    
     // clear scene
@@ -81,6 +86,7 @@ const main = async () => {
 
     // audio computations
     const audioLevel = analyze();
+    console.log(audioLevel)
     const smoothedAudioLevel = smooth(audioLevel);
     const candidateSprite = getSpriteByAudioLevel(smoothedAudioLevel);
     

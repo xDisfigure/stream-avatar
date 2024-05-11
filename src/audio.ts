@@ -1,28 +1,25 @@
-const getMicrophoneMediaStream = async () => {
+window.AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+
+export const getMicrophoneMediaStream = async (deviceId?: string) => {
     const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-            deviceId: 'a695726332ad7ce703ed05d25eb699e360ac13642b0eaf8c37e0178e97b7abed'
-            // deviceId: 'default'
+            deviceId: deviceId ?? 'default'
         }
     });
 
     return mediaStream;
 }
 
-window.AudioContext = window.AudioContext || (window as any).webkitAudioContext;
 
-export const createAudioAnalyzer = async () => {
-    const micMediaStream = await getMicrophoneMediaStream()
+export const createAudioAnalyzer = (mediaStream: MediaStream) => {
     const audioContext = new AudioContext();
     const analyzer = audioContext.createAnalyser();
     
     analyzer.fftSize = 512;
     const blockSize = analyzer.frequencyBinCount;
     const data = new Uint8Array(blockSize)
-    const source = audioContext.createMediaStreamSource(micMediaStream);
-
-    console.log(`microphone media stream id: ${micMediaStream.id}`);
+    const source = audioContext.createMediaStreamSource(mediaStream);
 
     source.connect(analyzer);
     
