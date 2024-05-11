@@ -56,11 +56,11 @@ const getSpriteByAudioLevel = (audioLevel: number) => {
 const mouthProgress = progress(60);
 const armProgress = progress(1200);
 
+let mouthSprite = mouthClose;
+
 const maxArmDegree = 6;
 let lastArmDegree = 0;
 let targetArmDegree = 0;
-
-let sprite = mouthClose;
 
 export const render = (time: number, audioLevel: number) => {
     if (context === null) {
@@ -75,22 +75,22 @@ export const render = (time: number, audioLevel: number) => {
 
     // mouth
     mouthProgress.onComplete = () => {
-        sprite = getSpriteByAudioLevel(audioLevel);
+        mouthSprite = getSpriteByAudioLevel(audioLevel);
     };
     mouthProgress.run(time);
 
-    const mouthConfig = configs.get(sprite);
+    const mouthConfig = configs.get(mouthSprite);
 
     if (mouthConfig === undefined) {
         throw new Error('mouth config does not exists');
     }
   
-    const mouthWidth = sprite.width * mouthConfig.scale;
-    const mouthHeight = sprite.height * mouthConfig.scale;
+    const mouthWidth = mouthSprite.width * mouthConfig.scale;
+    const mouthHeight = mouthSprite.height * mouthConfig.scale;
     const mouthX = canvas.width / 2 + mouthConfig.offsetX;
     const mouthY = canvas.height / 2 + mouthConfig.offsetY;
 
-    context.drawImage(sprite, mouthX, mouthY, mouthWidth, mouthHeight);
+    context.drawImage(mouthSprite, mouthX, mouthY, mouthWidth, mouthHeight);
 
     // arm
     armProgress.onComplete = () => {
