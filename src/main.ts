@@ -1,5 +1,6 @@
-import { createAudioAnalyzer, getMicrophoneMediaStream, smooth } from './audio';
+import { createAudioAnalyzer, smooth } from './audio';
 import { canvas, render } from './canvas';
+import { createSelect, getMicrophoneMediaStream } from './devices';
 
 import './style.css'
 
@@ -12,13 +13,18 @@ if (app === null) {
 app.appendChild(canvas);
 
 const main = async () => {
-  const microphoneId = 'default';
-  const micMediaStream = await getMicrophoneMediaStream(microphoneId);
-
-  const audioAnalyzer = createAudioAnalyzer(micMediaStream);
+  const { select, getSelected } = await createSelect('default');
   
-  console.log(`microphone media stream id: ${micMediaStream.id}`);
- 
+  let currentMicrophone = await getMicrophoneMediaStream(getSelected());
+  console.log(`microphone media stream id: ${currentMicrophone.mediaStream.id}`);
+  
+  const audioAnalyzer = createAudioAnalyzer(currentMicrophone.mediaStream);
+   
+  select.onchange = async () => {
+    await currentMicrophone.update(getSelected());
+    audioAnalyzer.updateMediaStream(currentMicrophone.mediaStream);
+  }
+  
   requestAnimationFrame(function frame(time) {
     const audioLevel =  audioAnalyzer.analyze();
     const smoothedAudioLevel = smooth(audioLevel);
@@ -27,6 +33,8 @@ const main = async () => {
 
     requestAnimationFrame(frame);
   });
+
+  app.append(select);
 };
 
 main();
